@@ -25,6 +25,8 @@ Future<void> signIn(Ref ref, BuildContext context, LoginBossDto loginDto) async 
     (user) {
       StorageService.setString(AppConfig.accessTokenKey, user.accessToken);
       StorageService.setString(AppConfig.refreshTokenKey, user.refreshToken);
+      final resolvedUsername = StorageService.getUsername() ?? loginDto.username;
+      StorageService.setString(AppConfig.userNameKey, resolvedUsername);
       SnackbarUtil.showSuccess(context, '${AppTexts.welcome}!');
       NavigationService.replaceWith(context, Routes.dashboard);
     },

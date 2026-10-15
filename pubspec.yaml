@@ -33,7 +33,7 @@ dependencies:
   connectivity_plus: ^7.0.0
   country_pickers: ^3.0.1
   cupertino_icons: ^1.0.8
-  date_field: ^6.0.3+1
+  date_field: ^7.0.0
   dio: ^5.8.0+1
   dropdown_button2: ^3.0.0
   firebase_core: ^4.3.0
@@ -43,7 +43,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^3.1.0
-  flutter_secure_storage: ^10.0.0
+  flutter_secure_storage: ^11.0.0
   flutter_svg: ^2.2.0
   gap: ^3.0.1
   google_fonts: ^8.0.2

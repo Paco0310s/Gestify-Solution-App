@@ -9,4 +9,6 @@ class Routes {
   static final String signUp = '/sign_up';
   static final String forgotPassword = '/forgot_password';
   static final String businessAdd = '/business_add';
+  static final String businessDetail = '/business_detail';
+  static final String businessEdit = '/business_edit';
 }

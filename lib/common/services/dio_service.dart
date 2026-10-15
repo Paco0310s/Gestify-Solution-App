@@ -8,6 +8,56 @@ import 'package:gestify_solution/common/services/storage_service.dart';
 import 'package:gestify_solution/common/utils/either.dart';
 
 class DioService {
+  static bool _isRefreshing = false;
+
+  /// Attempts to obtain a new access token using the stored refresh token.
+  static Future<bool> tryRefreshToken() async {
+    if (_isRefreshing) return false;
+    _isRefreshing = true;
+
+    try {
+      final refreshToken = StorageService.getString(AppConfig.refreshTokenKey);
+      if (refreshToken == null || refreshToken.isEmpty) {
+        return false;
+      }
+
+      final refreshDio = Dio(
+        BaseOptions(
+          baseUrl: AppConfig.baseUrl,
+          connectTimeout: AppConfig.connectTimeout,
+          receiveTimeout: AppConfig.receiveTimeout,
+        ),
+      );
+
+      final response = await refreshDio.post(
+        AppConfig.refreshTokenEndpoint,
+        data: {'refreshToken': refreshToken},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        if (data is Map<String, dynamic>) {
+          final newAccessToken = data['access_token'] ?? data['accessToken'];
+          final newRefreshToken = data['refresh_token'] ?? data['refreshToken'];
+
+          if (newAccessToken != null) {
+            StorageService.setString(AppConfig.accessTokenKey, newAccessToken.toString());
+          }
+          if (newRefreshToken != null) {
+            StorageService.setString(AppConfig.refreshTokenKey, newRefreshToken.toString());
+          }
+          AppLogger.info('Access token refreshed successfully');
+          return true;
+        }
+      }
+    } catch (e) {
+      AppLogger.warning('Token refresh failed: $e');
+    } finally {
+      _isRefreshing = false;
+    }
+    return false;
+  }
+
   static final Dio _dio =
       Dio(
           BaseOptions(
@@ -15,7 +65,6 @@ class DioService {
             connectTimeout: AppConfig.connectTimeout,
             receiveTimeout: AppConfig.receiveTimeout,
             sendTimeout: AppConfig.sendTimeout,
-            // headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
           ),
         )
         ..interceptors.add(
@@ -30,6 +79,29 @@ class DioService {
                 }
               }
               return handler.next(options);
+            },
+            onError: (error, handler) async {
+              if (error.response?.statusCode == 401) {
+                final requestPath = error.requestOptions.path;
+                final isAuthEndpoint = AppConfig.publicEndpoints.any((endpoint) => requestPath.contains(endpoint));
+
+                if (!isAuthEndpoint) {
+                  final refreshed = await tryRefreshToken();
+                  if (refreshed) {
+                    final newAccessToken = StorageService.getString(AppConfig.accessTokenKey);
+                    if (newAccessToken != null && error.requestOptions.data is! FormData) {
+                      error.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+                      try {
+                        final retryResponse = await _dio.fetch(error.requestOptions);
+                        return handler.resolve(retryResponse);
+                      } catch (retryError) {
+                        AppLogger.error('Request retry failed: $retryError');
+                      }
+                    }
+                  }
+                }
+              }
+              return handler.next(error);
             },
           ),
         );
@@ -57,26 +129,47 @@ class DioService {
         final statusCode = error.response?.statusCode ?? 0;
 
         String message = '';
-        String defaultMessage = '${AppTexts.errorServerResponse} (Status code: $statusCode)';
+        String defaultMessage = statusCode == 401
+            ? 'Tu sesión ha expirado o no tienes autorización. Por favor inicia sesión nuevamente.'
+            : '${AppTexts.errorServerResponse} (Status code: $statusCode)';
 
         if (error.response?.data != null && error.response?.data != '') {
           if (error.response!.data is Map<String, dynamic>) {
             final data = error.response!.data as Map<String, dynamic>;
-            message = data['message'] ?? data['error'] ?? data ?? defaultMessage;
+            if (data['errors'] is List && (data['errors'] as List).isNotEmpty) {
+              final list = data['errors'] as List;
+              final messages = list.map((e) {
+                if (e is Map) {
+                  return e['detail'] ?? e['message'] ?? e['error'] ?? e.toString();
+                }
+                return e.toString();
+              }).where((m) => m != null && m.toString().isNotEmpty).join('\n');
+
+              message = messages.isNotEmpty ? messages : (data['detail']?.toString() ?? defaultMessage);
+            } else {
+              final rawMessage = data['detail'] ?? data['message'] ?? data['error'];
+              if (rawMessage != null) {
+                message = rawMessage.toString();
+              } else {
+                message = data.toString();
+              }
+            }
           } else if (error.response!.data is String) {
             message = error.response!.data as String;
           } else {
-            message = defaultMessage;
+            message = error.response!.data.toString();
           }
         } else if (error.error != null && error.error.toString().isNotEmpty) {
           message = error.error.toString();
+        } else if (statusCode == 401) {
+          message = defaultMessage;
         } else if (error.message != null && error.message != '') {
           message = error.message ?? defaultMessage;
         } else {
           message = defaultMessage;
         }
 
-        AppLogger.warning('Server error: $message', error: error, stackTrace: error.stackTrace);
+        AppLogger.warning('Server error ($statusCode): $message | Data: ${error.response?.data}', error: error, stackTrace: error.stackTrace);
         return EitherUtil.failure(HttpFailure.serverError(statusCode, message));
 
       case DioExceptionType.cancel:
@@ -133,7 +226,7 @@ class DioService {
           return EitherUtil.success(result);
         } else if (data is Map<String, dynamic>) {
           // Si viene envuelto en un objeto, extraer la lista
-          final listData = data['data'] ?? data['products'] ?? data;
+          final listData = data['data'] ?? data['products'] ?? data['content'] ?? data;
           if (listData is List) {
             final result = fromJson(listData);
             return EitherUtil.success(result);
@@ -173,14 +266,18 @@ class DioService {
   }
 
   // Multipart/form-data
-  static Future<EitherUtil<HttpFailure, T>> postFormData<T>(String url, FormData formData, T Function(Map<String, dynamic>) fromJson) async {
+  static Future<EitherUtil<HttpFailure, T>> postFormData<T>(
+    String url,
+    FormData formData,
+    T Function(Map<String, dynamic>) fromJson, {
+    Future<FormData> Function()? formDataBuilder,
+  }) async {
     try {
       AppLogger.info('POST (multipart) Request: $url');
 
       final response = await _dio.post(
         url,
         data: formData,
-        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -191,9 +288,79 @@ class DioService {
         return EitherUtil.failure(HttpFailure.serverError(response.statusCode ?? 0, AppTexts.errorServerResponse));
       }
     } on DioException catch (error) {
+      if (error.response?.statusCode == 401 && formDataBuilder != null) {
+        final refreshed = await tryRefreshToken();
+        if (refreshed) {
+          try {
+            AppLogger.info('Retrying POST (multipart) after token refresh: $url');
+            final freshFormData = await formDataBuilder();
+            final retryResponse = await _dio.post(url, data: freshFormData);
+            if (retryResponse.statusCode == 200 || retryResponse.statusCode == 201) {
+              final responseData = retryResponse.data as Map<String, dynamic>;
+              return EitherUtil.success(fromJson(responseData));
+            }
+          } catch (retryError) {
+            AppLogger.error('Retry multipart POST failed: $retryError');
+          }
+        }
+      }
       return _handleError<T>(error);
     } catch (error) {
       AppLogger.error('Unexpected error in POST multipart: $error');
+      return EitherUtil.failure(HttpFailure.unexpectedError(error.toString()));
+    }
+  }
+
+  // PUT Multipart/form-data
+  static Future<EitherUtil<HttpFailure, T>> putFormData<T>(
+    String url,
+    FormData formData,
+    T Function(Map<String, dynamic>) fromJson, {
+    Future<FormData> Function()? formDataBuilder,
+  }) async {
+    try {
+      AppLogger.info('PUT (multipart) Request: $url');
+
+      final response = await _dio.put(
+        url,
+        data: formData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
+        if (response.data != null && response.data is Map<String, dynamic>) {
+          final responseData = response.data as Map<String, dynamic>;
+          final result = fromJson(responseData);
+          return EitherUtil.success(result);
+        } else {
+          return EitherUtil.success(fromJson({}));
+        }
+      } else {
+        return EitherUtil.failure(HttpFailure.serverError(response.statusCode ?? 0, AppTexts.errorServerResponse));
+      }
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 401 && formDataBuilder != null) {
+        final refreshed = await tryRefreshToken();
+        if (refreshed) {
+          try {
+            AppLogger.info('Retrying PUT (multipart) after token refresh: $url');
+            final freshFormData = await formDataBuilder();
+            final retryResponse = await _dio.put(url, data: freshFormData);
+            if (retryResponse.statusCode == 200 || retryResponse.statusCode == 201 || retryResponse.statusCode == 204) {
+              if (retryResponse.data != null && retryResponse.data is Map<String, dynamic>) {
+                final responseData = retryResponse.data as Map<String, dynamic>;
+                return EitherUtil.success(fromJson(responseData));
+              } else {
+                return EitherUtil.success(fromJson({}));
+              }
+            }
+          } catch (retryError) {
+            AppLogger.error('Retry multipart PUT failed: $retryError');
+          }
+        }
+      }
+      return _handleError<T>(error);
+    } catch (error) {
+      AppLogger.error('Unexpected error in PUT multipart: $error');
       return EitherUtil.failure(HttpFailure.unexpectedError(error.toString()));
     }
   }

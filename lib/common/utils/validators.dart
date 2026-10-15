@@ -190,6 +190,72 @@ class ValidatorsUtil {
 
     return null;
   }
+
+  static String? validateBusinessName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return AppTexts.emptyFieldError;
+    }
+    if (value.trim().length > 50) {
+      return AppTexts.maxCharactersError;
+    }
+    return null;
+  }
+
+  static String? validateBusinessDescription(String? value) {
+    if (value != null && value.length > 200) {
+      return AppTexts.maxCharactersError;
+    }
+    return null;
+  }
+
+  static String? validateRfc(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return AppTexts.emptyRfcError;
+    }
+    final clean = value.trim().toUpperCase();
+    if (!RfcValidator.validate(clean)) {
+      return AppTexts.invalidRfcError;
+    }
+    return null;
+  }
+
+  static String? validatePastOrPresentDate(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return AppTexts.emptyEstablishmentDateError;
+    }
+    final RegExp dateRegExp = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+    if (!dateRegExp.hasMatch(value.trim())) {
+      return AppTexts.invalidBirthdateError;
+    }
+
+    final parts = value.trim().split('-');
+    final year = int.parse(parts[0]);
+    final month = int.parse(parts[1]);
+    final day = int.parse(parts[2]);
+    final date = DateTime(year, month, day);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    if (date.isAfter(today)) {
+      return AppTexts.futureDateError;
+    }
+
+    return null;
+  }
+}
+
+class RfcValidator {
+  // Moral (12 chars): 3 letters, 6 digits, 3 homoclave
+  // Física (13 chars): 4 letters, 6 digits, 3 homoclave
+  static final RegExp _rfcRegExp = RegExp(r'^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$');
+
+  static bool validate(String rfc) {
+    final clean = rfc.trim().toUpperCase();
+    if (clean.length != 12 && clean.length != 13) {
+      return false;
+    }
+    return _rfcRegExp.hasMatch(clean);
+  }
 }
 
 class EmailValidator {

@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -8,13 +7,12 @@ import 'package:gestify_solution/common/logging/app_logger.dart';
 import 'package:gestify_solution/common/routes/app_routes.dart';
 import 'package:gestify_solution/common/routes/routes.dart';
 import 'package:gestify_solution/common/services/storage_service.dart';
-import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initialize storage service
   await StorageService.init();

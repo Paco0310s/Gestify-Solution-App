@@ -1,3 +1,4 @@
+import 'package:gestify_solution/common/constants/app_config.dart';
 import 'package:gestify_solution/common/logging/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -62,5 +63,29 @@ class StorageService {
   // Check if key exists
   static bool containsKey(String key) {
     return prefs.containsKey(key);
+  }
+
+  /// Retrieves the current username either extracted from the JWT access token or from storage.
+  static String? getUsername() {
+    final token = getString(AppConfig.accessTokenKey);
+    if (token != null) {
+      try {
+        final parts = token.split('.');
+        if (parts.length == 3) {
+          final normalized = base64Url.normalize(parts[1]);
+          final payload = jsonDecode(utf8.decode(base64Url.decode(normalized))) as Map<String, dynamic>;
+          final username = payload['preferred_username'] as String?;
+          if (username != null && username.isNotEmpty) {
+            setString(AppConfig.userNameKey, username);
+            return username;
+          }
+        }
+      } catch (_) {}
+    }
+
+    final stored = getString(AppConfig.userNameKey);
+    if (stored != null && stored.isNotEmpty) return stored;
+
+    return null;
   }
 }

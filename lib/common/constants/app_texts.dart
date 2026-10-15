@@ -86,10 +86,43 @@ class AppTexts {
   static const String businessesTitle = 'Empresas';
   static const String businessListTitle = 'Lista de Empresas';
   static const String addBusinessButton = 'Agregar Empresa';
+  static const String editBusinessTitle = 'Modificar Empresa';
+  static const String editBusinessSubtitle = 'Modifica los datos fiscales y comerciales de tu empresa';
+  static const String businessDetailTitle = 'Detalle de la Empresa';
+  static const String modifyBusinessButton = 'Modificar Empresa';
+  static const String deleteBusinessButton = 'Eliminar Empresa';
+  static const String deleteBusinessTitle = 'Eliminar Empresa';
+  static const String confirmDeleteBusiness = '¿Estás seguro de que deseas eliminar esta empresa? Esta acción no se puede deshacer.';
+  static const String businessCreatedSuccessfully = 'Empresa creada exitosamente';
+  static const String businessUpdatedSuccessfully = 'Empresa actualizada exitosamente';
+  static const String businessDeletedSuccessfully = 'Empresa eliminada exitosamente';
   static const String businessNameLabel = 'Nombre de la Empresa';
   static const String businessDescriptionLabel = 'Descripción';
   static const String businessRfcLabel = 'RFC';
   static const String businessLogoLabel = 'Logo de la Empresa';
+  static const String businessCoverLabel = 'Portada de la Empresa';
+  static const String businessEstablishmentDateLabel = 'Fecha de constitución';
+  static const String businessIndustryLabel = 'Giro / Industria';
+  static const String businessTypeLabel = 'Tipo de Empresa';
+  static const String businessTaxRegimenLabel = 'Régimen Fiscal';
+  static const String fiscalData = 'Datos Fiscales';
+  static const String generalData = 'Información General';
+  static const String statusActive = 'Activa';
+  static const String statusInactive = 'Inactiva';
+  static const String backToList = 'Volver a la lista';
+  static const String update = 'Actualizar';
+  static const String businessNameHint = 'Ej. Mi Empresa S.A. de C.V.';
+  static const String businessDescriptionHint = 'Describe brevemente las actividades de la empresa...';
+  static const String businessRfcHint = 'Ej. ABC010203XYZ';
+  static const String selectDateHint = 'Seleccionar fecha';
+  static const String selectIndustryHint = 'Selecciona una industria';
+  static const String selectBusinessTypeHint = 'Selecciona un tipo de empresa';
+  static const String selectTaxRegimenHint = 'Selecciona un régimen fiscal';
+  static const String logoRequirementHint = 'Formato cuadrado 1:1, máx. 2MB (PNG, JPG, WEBP)';
+  static const String coverRequirementHint = 'Formato panorámico 16:9, máx. 2MB (PNG, JPG, WEBP)';
+  static const String imageDimensionsInfo = 'Logo recomendado: proporción 1:1. Portada: proporción 16:9';
+  static const String change = 'Cambiar';
+  static const String remove = 'Quitar';
 
   // Jefes
   static const String bossesTitle = 'Jefes (Admin)';
@@ -130,6 +163,17 @@ class AppTexts {
   static const String emptyBirthdateError = 'Fecha de nacimiento vacía';
   static const String invalidBirthdateError = 'Formato inválido. Use DD/MM/YYYY';
   static const String mustBeAdultError = 'Debes ser mayor de edad';
+  static const String emptyRfcError = 'RFC requerido';
+  static const String invalidRfcError = 'RFC inválido (12 caracteres morales o 13 físicos)';
+  static const String futureDateError = 'La fecha no puede ser en el futuro';
+  static const String emptyEstablishmentDateError = 'Fecha de constitución requerida';
+  static const String emptyIndustryError = 'Debes seleccionar una industria';
+  static const String emptyBusinessTypeError = 'Debes seleccionar un tipo de empresa';
+  static const String emptyTaxRegimenError = 'Debes seleccionar un régimen fiscal';
+  static const String fileTooLargeError = 'El archivo supera el tamaño máximo permitido de 2MB';
+  static const String invalidCoverAspectRatioError = 'La portada debe tener proporción 16:9 con máx. 10% de tolerancia (ej. 1920x1080 o 1280x720)';
+  static const String invalidLogoAspectRatioError = 'El logotipo debe tener proporción cuadrada 1:1 con máx. 10% de tolerancia (ej. 500x500)';
+  static const String maxCharactersError = 'Supera el límite máximo de caracteres';
 
   // Languages
   static const String languageEnglish = 'English';

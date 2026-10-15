@@ -288,29 +288,59 @@ class BusinessesMobileViewWhenLoading extends ConsumerWidget {
   }
 }
 
-class BusinessItem extends StatelessWidget {
+class BusinessItem extends ConsumerWidget {
   final BusinessModel? business;
 
   const BusinessItem({super.key, required this.business});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
         side: BorderSide(color: AppColors.kNeutral200),
       ),
-      child: Center(
-        child: ListTile(
-          leading: Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(color: AppColors.kPrimary100, borderRadius: BorderRadius.circular(8)),
-            child: Icon(Icons.business, color: AppColors.kPrimary800),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: business == null
+            ? null
+            : () {
+                ref.read(selectedBusinessProvider.notifier).select(business);
+                NavigationService.navigateTo(
+                  context,
+                  Routes.businessDetail,
+                  arguments: business,
+                );
+              },
+        child: Center(
+          child: ListTile(
+            leading: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: AppColors.kPrimary100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: business?.logoUrl != null && business!.logoUrl!.isNotEmpty
+                    ? Image.network(
+                        business!.logoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.business, color: AppColors.kPrimary800),
+                      )
+                    : const Icon(Icons.business, color: AppColors.kPrimary800),
+              ),
+            ),
+            title: AppText(business?.name ?? '', fontSize: 14, fontWeight: FontWeight.w600),
+            subtitle: AppText(
+              business?.rfc.isNotEmpty == true ? 'RFC: ${business!.rfc}' : 'ID: ${business?.id ?? ''}',
+              fontSize: 11,
+              color: AppColors.kNeutral600,
+            ),
+            trailing: const Icon(Icons.chevron_right, color: AppColors.kNeutral400, size: 20),
           ),
-          title: AppText(business?.name ?? '', fontSize: 14, fontWeight: FontWeight.w600),
-          subtitle: AppText('ID: ${business?.id ?? ''}', fontSize: 10, color: AppColors.kNeutral600),
         ),
       ),
     );

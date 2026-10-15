@@ -58,7 +58,7 @@ final class SignInProvider
   }
 }
 
-String _$signInHash() => r'dbd6cb4bca8897b7f10e39febe845c9da2984526';
+String _$signInHash() => r'c20bca22260de5bfb05761c8fff18022ddb20dba';
 
 final class SignInFamily extends $Family
     with

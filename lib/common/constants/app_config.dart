@@ -1,7 +1,9 @@
 class AppConfig {
   // Base URLs
-  static const String baseUrl = 'https://api.gestifysolution.oscarmedina.cloud/api/v1';
-  static const String baseServerUrl = 'https://api.gestifysolution.oscarmedina.cloud';
+  // static const String baseUrl = 'https://api.gestifysolution.oscarmedina.cloud/api/v1';
+  // static const String baseServerUrl = 'https://api.gestifysolution.oscarmedina.cloud';
+  static const String baseUrl = 'http://localhost:8080/api/v1';
+  static const String baseServerUrl = 'http://localhost:8080';
 
   // API Endpoints
   static const String loginEndpoint = '/auth/login';
@@ -10,6 +12,7 @@ class AppConfig {
   static const String logoutEndpoint = '/auth/logout';
 
   static const String registerEndpoint = '/bosses';
+  static const String businessesEndpoint = '/businesses';
   static const String profileEndpoint = '';
 
   // Public endpoints (no authentication required)

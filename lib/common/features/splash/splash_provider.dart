@@ -47,6 +47,7 @@ Future<void> splashStartupLogic(Ref ref, BuildContext context) async {
         (loggedBoss) {
           StorageService.setString(AppConfig.accessTokenKey, loggedBoss.accessToken);
           StorageService.setString(AppConfig.refreshTokenKey, loggedBoss.refreshToken);
+          StorageService.getUsername();
 
           SnackbarUtil.showSuccess(context, AppTexts.welcome);
           NavigationService.replaceWith(context, Routes.dashboard);

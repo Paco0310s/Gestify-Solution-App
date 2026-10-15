@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestify_solution/business/features/businesses/business_add_screen.dart';
+import 'package:gestify_solution/business/features/businesses/business_detail_screen.dart';
 import 'package:gestify_solution/business/features/businesses/businesses_screen.dart';
 import 'package:gestify_solution/business/features/dashboard/dashboard_screen.dart';
 import 'package:gestify_solution/business/features/forgot_password/forgot_password_screen.dart';
@@ -21,6 +22,8 @@ class AppRoutes {
       Routes.signUp: (context) => const SignUpScreen(),
       Routes.forgotPassword: (context) => const ForgotPasswordScreen(),
       Routes.businessAdd: (context) => BusinessAddScreen(title: AppTexts.addBusinessButton),
+      Routes.businessDetail: (context) => const BusinessDetailScreen(),
+      Routes.businessEdit: (context) => BusinessAddScreen(title: AppTexts.editBusinessTitle),
     };
   }
 }

@@ -14,12 +14,13 @@ class AppButton extends StatelessWidget {
   final bool isLoading;
   final double fontSize;
   final Widget? leadingWidget;
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
   final double elevation;
   final Color? borderColor;
   final FontWeight fontWeight;
   final Function() onPressed;
+  final EdgeInsetsGeometry? padding;
 
   const AppButton({
     super.key,
@@ -30,11 +31,12 @@ class AppButton extends StatelessWidget {
     this.isLoading = false,
     this.fontSize = 16.0,
     this.leadingWidget,
-    this.width = double.infinity,
-    this.height = 50.0,
+    this.width,
+    this.height,
     this.elevation = 0.0,
     this.borderColor,
     this.fontWeight = FontWeight.w600,
+    this.padding,
   });
 
   @override
@@ -43,8 +45,9 @@ class AppButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: backgroundColor,
         disabledBackgroundColor: backgroundColor?.withAlpha(200),
-        minimumSize: Size(width, height),
-        maximumSize: Size(width, height),
+        minimumSize: Size(width ?? 0.0, height ?? 0.0),
+        maximumSize: Size(width ?? double.infinity, height ?? double.infinity),
+        padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         foregroundColor: textColor,
         elevation: elevation,
@@ -53,24 +56,19 @@ class AppButton extends StatelessWidget {
       onPressed: isLoading ? null : onPressed,
       child: isLoading
           ? const LoadingButton()
-          : Builder(
-              builder: (context) {
-                if (leadingWidget != null) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Flexible(flex: 10, child: leadingWidget!),
-                      Flexible(flex: 5, child: Container()),
-                      Flexible(
-                        flex: 85,
-                        child: AppText(text, fontSize: fontSize, fontWeight: fontWeight),
-                      ),
-                    ],
-                  );
-                }
-                return AppText(text, fontSize: fontSize, fontWeight: fontWeight);
-              },
-            ),
+          : (leadingWidget != null
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    leadingWidget!,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: AppText(text, fontSize: fontSize, fontWeight: fontWeight),
+                    ),
+                  ],
+                )
+              : AppText(text, fontSize: fontSize, fontWeight: fontWeight)),
     );
   }
 }
